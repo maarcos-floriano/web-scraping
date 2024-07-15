@@ -1,6 +1,10 @@
+from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+
+app = Flask(__name__)
 
 def buscar_produtos(termo):
     url = f'https://lista.mercadolivre.com.br/{termo}'
@@ -33,12 +37,16 @@ def salvar_csv(produtos, nome_arquivo):
     df.to_csv(nome_arquivo, index=False, encoding='utf-8')
     print(f'Arquivo {nome_arquivo} salvo com sucesso!')
 
-def main():
-    termo = input("Digite o nome do produto que deseja buscar: ")
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/search', methods=['POST'])
+def search():
+    termo = request.form['termo']
     soup = buscar_produtos(termo)
     produtos = extrair_informacoes(soup)
-    nome_arquivo = f'{termo.replace(" ", "_")}_mercadolivre.csv'
-    salvar_csv(produtos, nome_arquivo)
+    return render_template('index.html', produtos=produtos, termo=termo)
 
 if __name__ == '__main__':
-    main()
+    app.run(debug=True)
